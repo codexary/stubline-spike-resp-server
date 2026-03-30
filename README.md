@@ -4,6 +4,8 @@ English | [简体中文](README.zh-CN.md)
 
 A spike: a minimal server that speaks enough of the Redis protocol (RESP2) for the real `redis-cli` to talk to it. We built it to understand the wire protocol before putting Redis in front of the seat inventory. It is not meant for production.
 
+Supported commands: `PING`, `ECHO`, `SET`, `GET`, `DEL`, sent as RESP2 arrays of bulk strings, with one shared in-memory map. The tests use a raw socket to split one command across writes and to pipeline several commands in one write.
+
 ## Build and test
 
 You need JDK 21. The Maven wrapper downloads the right Maven version by itself.
@@ -11,6 +13,26 @@ You need JDK 21. The Maven wrapper downloads the right Maven version by itself.
 ```bash
 ./mvnw -q verify
 ```
+
+## Run
+
+```bash
+./mvnw -q exec:java
+```
+
+The server logs `RESP server listening on 6380` and keeps running until you press Ctrl+C.
+
+## Try it with redis-cli
+
+In a second terminal, with `redis-cli` installed:
+
+```bash
+redis-cli -p 6380 PING
+redis-cli -p 6380 SET greeting hello
+redis-cli -p 6380 GET greeting
+```
+
+Expected replies: `PONG`, `OK`, `hello`.
 
 The server binds to loopback by default because it has no authentication. Stop the loopback server before the Docker example; that example explicitly binds all interfaces so a container can reach the host. Use it only on a trusted local network.
 

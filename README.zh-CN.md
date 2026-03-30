@@ -4,6 +4,8 @@
 
 这是一个 spike：一个最小的服务器，实现了足够多的 Redis 协议（RESP2），能让真正的 `redis-cli` 和它对话。我们在考虑给座位库存前面加一层 Redis；正式接入之前，先写它来弄清客户端和服务器之间到底传哪些字节。它不用于生产环境。
 
+支持的命令：`PING`、`ECHO`、`SET`、`GET`、`DEL`，以 RESP2 数组加 bulk string 的形式发送；所有连接共用一个内存 Map。测试用原始 socket 把一条命令拆成多次写入，也把多条命令放进一次写入（pipeline）。
+
 ## 构建与测试
 
 需要 JDK 21。Maven wrapper（`./mvnw`）会自己下载项目指定版本的 Maven，不用另外安装。
@@ -11,6 +13,26 @@
 ```bash
 ./mvnw -q verify
 ```
+
+## 运行
+
+```bash
+./mvnw -q exec:java
+```
+
+服务器输出 `RESP server listening on 6380`，之后一直运行，按 Ctrl+C 停止。
+
+## 用 redis-cli 试一试
+
+另开一个终端；如果本机装了 `redis-cli`：
+
+```bash
+redis-cli -p 6380 PING
+redis-cli -p 6380 SET greeting hello
+redis-cli -p 6380 GET greeting
+```
+
+预期回复依次是 `PONG`、`OK`、`hello`。
 
 服务器默认只监听本机回环地址，因为它没有身份认证。运行 Docker 示例前先停止本地服务器；该示例显式监听所有接口，让容器能够访问宿主机。仅在可信本地网络运行。
 
