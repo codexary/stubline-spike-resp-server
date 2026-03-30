@@ -2,10 +2,12 @@ package com.elsworne.stubline.spike.resp;
 
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+/** Starts the RESP framing lab server. */
 public final class RespMain {
-  private static final Logger LOG = Logger.getLogger(RespMain.class.getName());
+  private static final Logger LOG = LoggerFactory.getLogger(RespMain.class);
 
   private RespMain() {}
 

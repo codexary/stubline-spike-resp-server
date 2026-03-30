@@ -4,7 +4,7 @@ English | [简体中文](README.zh-CN.md)
 
 A spike: a minimal server that speaks enough of the Redis protocol (RESP2) for the real `redis-cli` to talk to it. We built it to understand the wire protocol before putting Redis in front of the seat inventory. It is not meant for production.
 
-Supported commands: `PING`, `ECHO`, `SET`, `GET`, `DEL`, sent as RESP2 arrays of bulk strings, with one shared in-memory map. The tests use a raw socket to split one command across writes and to pipeline several commands in one write.
+Supported commands: `PING`, `ECHO`, `SET`, `GET`, `DEL`, sent as RESP2 arrays of bulk strings or as inline commands (a plain line such as `PING`, which is what you type into `nc`). Values are kept as raw bytes in one shared in-memory map, so binary values round-trip unchanged. Unknown commands get the same error text as Redis.
 
 ## Build and test
 
