@@ -81,6 +81,47 @@ class RespServerTest {
   }
 
   @Test
+  void skipsEmptyLineBeforeBinaryRedisCliPipeTerminator() throws Exception {
+    byte[] terminator = {
+      0x00, 0x0d, 0x0a, (byte) 0x80, (byte) 0xff, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
+    };
+    try (var server = new RespServer(0)) {
+      server.start();
+      try (var socket = connect(server)) {
+        var pipeline = new ByteArrayOutputStream();
+        pipeline.write(ascii("*3\r\n$3\r\nSET\r\n$1\r\na\r\n$1\r\n1\r\n"));
+        pipeline.write(ascii("*3\r\n$3\r\nSET\r\n$1\r\nb\r\n$1\r\n2\r\n"));
+        pipeline.write(ascii("\r\n*2\r\n$4\r\nECHO\r\n$20\r\n"));
+        pipeline.write(terminator);
+        pipeline.write(ascii("\r\n"));
+        socket.getOutputStream().write(pipeline.toByteArray());
+        socket.shutdownOutput();
+
+        var expected = new ByteArrayOutputStream();
+        expected.write(ascii("+OK\r\n+OK\r\n$20\r\n"));
+        expected.write(terminator);
+        expected.write(ascii("\r\n"));
+        assertArrayEquals(expected.toByteArray(), socket.getInputStream().readAllBytes());
+      }
+    }
+  }
+
+  @Test
+  void choosesProtocolForEachCommandAfterEmptyLines() throws Exception {
+    try (var server = new RespServer(0)) {
+      server.start();
+      try (var socket = connect(server)) {
+        socket
+            .getOutputStream()
+            .write(ascii("\r\n\r\nPING\r\n*1\r\n$4\r\nPING\r\n\r\nPING\r\n\r\n"));
+        socket.shutdownOutput();
+        assertArrayEquals(
+            ascii("+PONG\r\n+PONG\r\n+PONG\r\n"), socket.getInputStream().readAllBytes());
+      }
+    }
+  }
+
+  @Test
   void recoversFromClientReset() throws Exception {
     try (var server = new RespServer(0)) {
       server.start();

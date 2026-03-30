@@ -17,12 +17,20 @@ final class RespCodec {
   private RespCodec() {}
 
   static List<byte[]> readCommand(InputStream in) throws IOException {
-    int marker = in.read();
-    if (marker == -1) {
-      return null;
-    }
-    if (marker != '*') {
-      return readInline(in, marker);
+    while (true) {
+      int marker = in.read();
+      if (marker == -1) {
+        return null;
+      }
+      if (marker == '*') {
+        break;
+      }
+      List<byte[]> args = readInline(in, marker);
+      if (!args.isEmpty()) {
+        return args;
+      }
+      // redis-cli --pipe inserts an empty line before its RESP ECHO terminator.
+      // Read a fresh marker so the next command can use either protocol.
     }
     int count = number(readLine(in));
     if (count < 1 || count > 16) {
@@ -50,7 +58,7 @@ final class RespCodec {
     byte[] line = readLine(in, first);
     String text = new String(line, StandardCharsets.US_ASCII).trim();
     if (text.isEmpty()) {
-      throw new IOException("Empty inline command");
+      return List.of();
     }
     List<byte[]> args = new ArrayList<>();
     for (String part : text.split("\\s+")) {
@@ -65,11 +73,8 @@ final class RespCodec {
 
   private static byte[] readLine(InputStream in, int first) throws IOException {
     var bytes = new ByteArrayOutputStream();
-    if (first >= 0) {
-      bytes.write(first);
-    }
+    int value = first >= 0 ? first : in.read();
     while (true) {
-      int value = in.read();
       if (value < 0) {
         throw new EOFException("Truncated RESP line");
       }
@@ -83,6 +88,7 @@ final class RespCodec {
       if (bytes.size() > MAX_LINE) {
         throw new IOException("RESP line too long");
       }
+      value = in.read();
     }
   }
 
