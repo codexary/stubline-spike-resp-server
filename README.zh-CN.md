@@ -68,3 +68,7 @@ scripts/capture-pipe-bytes.sh
 这个独立小项目记录 Stubline 的实验。结论写在 Stubline 主仓库的 ADR 中；上文记录了测试结果。
 
 本仓库的代码与文档借助 AI 工具编写；记录的输出都来自实际运行。
+
+## 结论
+
+实验结果及其对后端决策的影响见[FINDINGS.zh-CN.md](FINDINGS.zh-CN.md)。

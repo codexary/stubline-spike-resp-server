@@ -68,3 +68,7 @@ This repository is licensed under the [MIT License](LICENSE).
 This standalone spike records an experiment for Stubline. Its conclusion is recorded in the main Stubline repository ADR; the observed result is described above.
 
 The code and documents in this repository were written with the help of AI tools; every recorded output comes from actually running them.
+
+## Findings
+
+The experiment results and their effect on the backend decision are recorded in [FINDINGS.md](FINDINGS.md).
