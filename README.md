@@ -34,6 +34,29 @@ redis-cli -p 6380 GET greeting
 
 Expected replies: `PONG`, `OK`, `hello`.
 
+### Without installing Redis
+
+Docker runs the official `redis:8` image, which contains `redis-cli`. `--rm` deletes the container when the command ends, and `host.docker.internal` is the name under which a container reaches a server on your own machine (Docker Desktop on macOS and Windows provides it; on Linux add `--add-host=host.docker.internal:host-gateway` before `redis:8`).
+
+```bash
+SPIKE_BIND_ADDRESS=0.0.0.0 ./mvnw -q exec:java
+```
+In another terminal:
+
+```bash
+docker run --rm -it redis:8 redis-cli -h host.docker.internal -p 6380 PING
+```
+
+Tested with Docker Desktop 29.7.2 on macOS.
+
+## Capture the bytes redis-cli sends
+
+`scripts/capture-pipe-bytes.sh` listens with `nc` instead of the server, runs `redis-cli --pipe` against it and prints the captured bytes with `xxd`. It shows what `redis-cli` appends after the last command of a pipe: an empty line, then an `ECHO` of 20 random bytes that it waits to get back.
+
+```bash
+scripts/capture-pipe-bytes.sh
+```
+
 The server binds to loopback by default because it has no authentication. Stop the loopback server before the Docker example; that example explicitly binds all interfaces so a container can reach the host. Use it only on a trusted local network.
 
 ## License

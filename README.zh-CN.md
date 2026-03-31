@@ -34,6 +34,29 @@ redis-cli -p 6380 GET greeting
 
 预期回复依次是 `PONG`、`OK`、`hello`。
 
+### 不安装 Redis 也能用
+
+Docker 可以运行官方的 `redis:8` 镜像，镜像里自带 `redis-cli`。`--rm` 表示命令结束后删除这个容器；`host.docker.internal` 是容器访问你本机上服务器时用的名字（macOS 和 Windows 上的 Docker Desktop 会提供它；Linux 上要在 `redis:8` 之前加 `--add-host=host.docker.internal:host-gateway`）。
+
+```bash
+SPIKE_BIND_ADDRESS=0.0.0.0 ./mvnw -q exec:java
+```
+在另一个终端运行：
+
+```bash
+docker run --rm -it redis:8 redis-cli -h host.docker.internal -p 6380 PING
+```
+
+已在 macOS 的 Docker Desktop 29.7.2 上测试。
+
+## 录下 redis-cli 发出的字节
+
+`scripts/capture-pipe-bytes.sh` 用 `nc` 代替服务器监听端口，对它运行一次 `redis-cli --pipe`，再用 `xxd` 打印录到的字节。从输出能看到 `redis-cli` 在 pipe 最后一条命令之后追加的内容：一个空行，然后是一条带 20 个随机字节的 `ECHO`，它会等服务器把这 20 个字节原样送回来。
+
+```bash
+scripts/capture-pipe-bytes.sh
+```
+
 服务器默认只监听本机回环地址，因为它没有身份认证。运行 Docker 示例前先停止本地服务器；该示例显式监听所有接口，让容器能够访问宿主机。仅在可信本地网络运行。
 
 ## 许可证
